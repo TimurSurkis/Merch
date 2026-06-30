@@ -1,80 +1,36 @@
-import { useState, useRef } from 'react';
-import Canvas from './components/Canvas';
-import CanvasTools from './components/CanvasTools';
-import BrushColor from './components/brushParams/BrushColor';
-import Tools from './components/Tools';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
+import Canvas from './components/Canvas';
+import SidePanel from './components/elements/SidePanel';
 
 function App() {
-	const [brushSize, setBrushSize] = useState(5);
-	const [brushColor, setBrushColor] = useState('#000000');
-	const [tool, setTool] = useState('pencil');
-	const [lastTool, setLastTool] = useState('rectangle');
-	const [shapeFillColor, setShapeFillColor] = useState('#ffffff');
-	const [shapeStrokeColor, setShapeStrokeColor] = useState('#000000');
+	const wrapperRef = useRef(null);
+	const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-	const canvasRef = useRef();
+	useEffect(() => {
+		if (!wrapperRef.current) return;
 
-	const handleCanvasClear = () => {
-		canvasRef.current?.clearCanvas();
-	};
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (let entry of entries) {
+				setDimensions({
+					width: entry.contentRect.width,
+					height: entry.contentRect.height,
+				});
+			}
+		});
 
-	const setLastToolHandler = (selectedTool) => {
-		if (selectedTool) {
-			setLastTool(selectedTool);
-			return;
-		}
-
-		setLastTool(
-			tool === 'rectangle' || tool === 'ellipse' || tool === 'triangle'
-				? tool
-				: lastTool
-		);
-	};
+		resizeObserver.observe(wrapperRef.current);
+		return () => resizeObserver.disconnect();
+	}, []);
 
 	return (
-		<div className="app">
-			<div className="canvas-and-settings">
-				<CanvasTools
-					value={brushSize}
-					onChange={setBrushSize}
-					onClick={handleCanvasClear}
-					currentTool={tool}
-					shapeStrokeColor={shapeStrokeColor}
-					shapeFillColor={shapeFillColor}
-					setShapeStrokeColor={setShapeStrokeColor}
-                    setShapeFillColor={setShapeFillColor}
-				/>
-				<div className="canvas-and-color">
-					<div className="canvas-and-tools">
-						<Tools
-							currentTool={tool}
-							onClick={setTool}
-							setShapeFillColor={setShapeFillColor}
-							lastTool={lastTool}
-							setLastTool={setLastToolHandler}
-						/>
-						<Canvas
-							ref={canvasRef}
-							brushSize={brushSize}
-							brushColor={brushColor}
-							shapeStrokeColor={shapeStrokeColor}
-							shapeFillColor={shapeFillColor}
-							currentTool={tool}
-						/>
-					</div>
-					<div className="brush-color-section">
-						<BrushColor
-							brushColor={brushColor}
-							onClick={setBrushColor}
-						/>
-					</div>
-				</div>
+		<div className="container">
+			<SidePanel />
+			<div ref={wrapperRef} className="canvas-container">
+				<Canvas size={dimensions} />
 			</div>
 		</div>
 	);
 }
-
-//test
 
 export default App;
