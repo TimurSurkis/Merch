@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import Canvas from './components/Canvas';
 import SidePanel from './components/elements/SidePanel';
+import Properties from './components/Properties';
 
 function App() {
 	const wrapperRef = useRef(null);
@@ -24,11 +25,14 @@ function App() {
 	}, []);
 
 	return (
-		<div className="container">
+		<div className="editor-shell">
 			<SidePanel />
-			<div ref={wrapperRef} className="canvas-container">
-				<Canvas size={dimensions} />
-			</div>
+			<main className="canvas-workspace" aria-label="Canvas workspace">
+				<div ref={wrapperRef} className="canvas-container">
+					<Canvas size={dimensions} />
+				</div>
+			</main>
+			<Properties />
 		</div>
 	);
 }

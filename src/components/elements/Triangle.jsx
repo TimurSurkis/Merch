@@ -1,9 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { RegularPolygon, Transformer } from 'react-konva';
+import useCurrentTool from '../../hooks/useCurrentTool';
+import {
+	onDragMove,
+	onTransform,
+	transformerBoxFunc,
+} from '../../util/Shape&TransformerFunctions';
 
 const TriangleComp = ({ shapeProps, isSelected, onSelect, onChange }) => {
 	const shapeRef = useRef();
 	const tfRef = useRef();
+
+	const currentTool = useCurrentTool();
 
 	useEffect(() => {
 		if (isSelected) {
@@ -15,48 +23,33 @@ const TriangleComp = ({ shapeProps, isSelected, onSelect, onChange }) => {
 		<>
 			<RegularPolygon
 				onClick={() => {
-					console.log(isSelected);
 					onSelect();
 				}}
 				onTap={onSelect}
 				ref={shapeRef}
+				sides={3}
 				x={shapeProps.x}
 				y={shapeProps.y}
-				sides={3}
-				radius={shapeProps.radius || 5}
 				fill={shapeProps.fill}
-				draggable={isSelected}
-				onDragEnd={(e) => {
-					onChange({
-						...shapeProps,
-						x: e.target.x(),
-						y: e.target.y(),
-					});
-				}}
-				onTransformEnd={() => {
-					const node = shapeRef.current;
-
-					onChange({
-						...shapeProps,
-						x: node.x(),
-						y: node.y(),
-					});
-				}}
+				stroke={
+					shapeProps.strokeEnabled ? shapeProps.stroke : undefined
+				}
+				strokeWidth={shapeProps.strokeWidth ?? 1}
+				cornerRadius={shapeProps.cornerRadius}
+				strokeScaleEnabled={false}
+				radius={shapeProps.radius}
+				draggable={isSelected || currentTool === 'move'}
+				onDragMove={() => onDragMove(shapeRef, shapeProps, onChange)}
+				onTransform={() =>
+					onTransform('triangle', shapeRef, shapeProps, onChange)
+				}
 			/>
 			{isSelected && (
 				<Transformer
 					ref={tfRef}
 					flipEnabled={false}
 					centeredScaling={true}
-					boundBoxFunc={(oldBox, newBox) => {
-						if (
-							Math.abs(newBox.width) < 5 ||
-							Math.abs(newBox.height) < 5
-						) {
-							return oldBox;
-						}
-						return newBox;
-					}}
+					boundBoxFunc={transformerBoxFunc}
 				/>
 			)}
 		</>

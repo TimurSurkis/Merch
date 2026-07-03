@@ -1,9 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { Ellipse, Transformer } from 'react-konva';
+import useCurrentTool from '../../hooks/useCurrentTool';
+import {
+	onDragMove,
+	onTransform,
+	transformerBoxFunc,
+} from '../../util/Shape&TransformerFunctions';
 
 const CircleComp = ({ shapeProps, isSelected, onSelect, onChange }) => {
 	const shapeRef = useRef();
 	const tfRef = useRef();
+
+	const currentTool = useCurrentTool();
 
 	useEffect(() => {
 		if (isSelected) {
@@ -18,45 +26,32 @@ const CircleComp = ({ shapeProps, isSelected, onSelect, onChange }) => {
 				onTap={onSelect}
 				ref={shapeRef}
 				{...shapeProps}
-				draggable={isSelected ? true : false}
-				onDragEnd={(e) => {
-					onChange({
-						...shapeProps,
-						x: e.target.x(),
-						y: e.target.y(),
-					});
-				}}
-				onTransformEnd={() => {
-					const node = shapeRef.current;
-					const scaleX = node.scaleX();
-					const scaleY = node.scaleY();
-
-					node.scaleX(1);
-					node.scaleY(1);
-
-					onChange({
-						...shapeProps,
-						x: node.x(),
-						y: node.y(),
-						radiusX: Math.max(5, node.radiusX() * scaleX),
-						radiusY: Math.max(5, node.radiusY() * scaleY),
-					});
-				}}
+				stroke={
+					shapeProps.strokeEnabled ? shapeProps.stroke : undefined
+				}
+				strokeWidth={shapeProps.strokeWidth ?? 1}
+				draggable={isSelected || currentTool === 'move'}
+				onDragMove={() => onDragMove(shapeRef, shapeProps, onChange)}
+				onTransform={() =>
+					onTransform('circle', shapeRef, shapeProps, onChange)
+				}
 			/>
 			{isSelected && (
 				<Transformer
 					ref={tfRef}
 					flipEnabled={false}
+					enabledAnchors={[
+						'top-left',
+						'top-center',
+						'top-right',
+						'middle-right',
+						'middle-left',
+						'bottom-left',
+						'bottom-center',
+						'bottom-right',
+					]}
 					centeredScaling={true}
-					boundBoxFunc={(oldBox, newBox) => {
-						if (
-							Math.abs(newBox.width) < 5 ||
-							Math.abs(newBox.height) < 5
-						) {
-							return oldBox;
-						}
-						return newBox;
-					}}
+					boundBoxFunc={transformerBoxFunc}
 				/>
 			)}
 		</>

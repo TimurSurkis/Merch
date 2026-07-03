@@ -1,9 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { Line, Transformer } from 'react-konva';
+import useCurrentTool from '../../hooks/useCurrentTool';
+import {
+	onTransform,
+	transformerBoxFunc,
+} from '../../util/Shape&TransformerFunctions';
 
 const ManualShape = ({ shapeProps, isSelected, onSelect, onChange }) => {
 	const shapeRef = useRef();
 	const tfRef = useRef();
+
+	const currentTool = useCurrentTool();
 
 	useEffect(() => {
 		if (isSelected) {
@@ -23,42 +30,24 @@ const ManualShape = ({ shapeProps, isSelected, onSelect, onChange }) => {
 				x={shapeProps.x}
 				y={shapeProps.y}
 				points={shapeProps.points}
-				tension={0}
+				tension={shapeProps.tension}
+				strokeScaleEnabled={false}
 				fill={shapeProps.fill}
-				stroke={'white'}
+				stroke={
+					shapeProps.strokeEnabled ? shapeProps.stroke : undefined
+				}
+				strokeWidth={shapeProps.strokeWidth ?? 1}
 				closed
-				draggable={isSelected}
-				onDragEnd={(e) => {
-					onChange({
-						...shapeProps,
-						x: e.target.x(),
-						y: e.target.y(),
-					});
-				}}
-				onTransformEnd={() => {
-					const node = shapeRef.current;
-
-					onChange({
-						...shapeProps,
-						x: node.x(),
-						y: node.y(),
-					});
-				}}
+				draggable={isSelected || currentTool === 'move'}
+				onDragMove={() => onDragMove(shapeRef, shapeProps, onChange)}
+				onTransform={() => onTransform('manualShape', shapeRef, shapeProps, onChange)}
 			/>
 			{isSelected && (
 				<Transformer
 					ref={tfRef}
 					flipEnabled={false}
 					centeredScaling={true}
-					boundBoxFunc={(oldBox, newBox) => {
-						if (
-							Math.abs(newBox.width) < 5 ||
-							Math.abs(newBox.height) < 5
-						) {
-							return oldBox;
-						}
-						return newBox;
-					}}
+					boundBoxFunc={transformerBoxFunc}
 				/>
 			)}
 		</>

@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-	currentTool: 'manualShape',
+	currentTool: 'move',
 };
 
 const toolSlice = createSlice({
